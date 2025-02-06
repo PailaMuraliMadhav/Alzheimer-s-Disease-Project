@@ -1,0 +1,62 @@
+# Load necessary libraries
+library(caret)
+library(e1071)      # For Naive Bayes and SVM
+library(class)      # For KNN
+library(rpart)      # For Decision Tree
+library(neuralnet)       # For Multiple Linear Regression
+
+# Load dataset
+setwd("C:/Users/mural/OneDrive/Desktop/SEM 5/INT234")
+data <- read.csv("alzheimers_disease_data.csv")
+
+# Drop unnecessary columns
+data <- data[, !(names(data) %in% c("PatientID", "DoctorInCharge"))]
+
+# Convert Diagnosis to factor (Target variable)
+data$Diagnosis <- as.factor(data$Diagnosis)
+
+# Split dataset into training (70%) and testing (30%)
+set.seed(123)
+trainIndex <- createDataPartition(data$Diagnosis, p = 0.8, list = FALSE)
+trainData <- data[trainIndex, ]
+testData <- data[-trainIndex, ]
+
+# K-Nearest Neighbors (KNN)
+knn_pred <- knn(train = trainData[, -ncol(trainData)], test = testData[, -ncol(testData)], 
+                cl = trainData$Diagnosis, k = 5)
+knn_acc <- sum(knn_pred == testData$Diagnosis) / length(testData$Diagnosis) * 100
+
+# Naive Bayes
+nb_model <- naiveBayes(Diagnosis ~ ., data = trainData)
+bnb_pred <- predict(nb_model, testData)
+nb_acc <- sum(bnb_pred == testData$Diagnosis) / nrow(testData) * 100
+
+# Decision Tree
+dt_model <- rpart(Diagnosis ~ ., data = trainData, method = "class")
+dt_pred <- predict(dt_model, testData, type = "class")
+dt_acc <- sum(dt_pred == testData$Diagnosis) / nrow(testData) * 100
+
+# Support Vector Machine (SVM)
+svm_model <- svm(Diagnosis ~ ., data = trainData, kernel = "linear")
+svm_pred <- predict(svm_model, testData)
+svm_acc <- sum(svm_pred == testData$Diagnosis) / nrow(testData) * 100
+
+# Multiple Linear Regression (Converted to Classification)
+mlr_model <- multinom(Diagnosis ~ ., data = trainData)
+mlr_pred <- predict(mlr_model, testData)
+mlr_acc <- sum(mlr_pred == testData$Diagnosis) / nrow(testData) * 100
+
+# Print Accuracy Results
+cat("KNN Accuracy:", knn_acc, "%\n")
+cat("Naive Bayes Accuracy:", nb_acc, "%\n")
+cat("Decision Tree Accuracy:", dt_acc, "%\n")
+cat("SVM Accuracy:", svm_acc, "%\n")
+cat("Multiple Linear Regression Accuracy:", mlr_acc, "%\n")
+# Create a table to compare accuracy
+accuracy_table <- data.frame(
+  Model = c("KNN", "Naive Bayes", "Decision Tree", "SVM", "Multiple Linear Regression"),
+  Accuracy = c(knn_acc, nb_acc, dt_acc, svm_acc, mlr_acc)
+)
+
+# Print Accuracy Results
+print(accuracy_table)
