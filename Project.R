@@ -4,6 +4,7 @@ library(e1071)      # For Naive Bayes and SVM
 library(class)      # For KNN
 library(rpart)      # For Decision Tree
 library(neuralnet)       # For Multiple Linear Regression
+library(ggplot2)  
 
 setwd("C:/Users/mural/OneDrive/Desktop/SEM 5/INT234")
 data <- read.csv("alzheimers_disease_data.csv")
@@ -32,6 +33,14 @@ dt_model <- rpart(Diagnosis ~ ., data = trainData, method = "class")
 dt_pred <- predict(dt_model, testData, type = "class")
 dt_acc <- sum(dt_pred == testData$Diagnosis) / nrow(testData) * 100
 
+library(rpart.plot)  
+
+rpart.plot(dt_model, 
+           type = 2, 
+           extra = 104, 
+           fallen.leaves = TRUE, 
+           main = "Decision Tree for Alzheimer's Diagnosis")
+
 # SVM
 svm_model <- svm(Diagnosis ~ ., data = trainData, kernel = "linear")
 svm_pred <- predict(svm_model, testData)
@@ -55,3 +64,13 @@ accuracy_table <- data.frame(
 )
 
 print(accuracy_table)
+
+ggplot(accuracy_table, aes(x = Model, y = Accuracy, fill = Model)) +
+  geom_bar(stat = "identity", width = 0.6) +
+  geom_text(aes(label = round(Accuracy, 2)), vjust = -0.5, size = 5) +
+  labs(title = "Model Accuracy Comparison", y = "Accuracy (%)", x = "Model") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"),
+        legend.position = "none",
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14))
